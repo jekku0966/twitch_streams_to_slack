@@ -1,4 +1,4 @@
-# twitch_stream_to_slack
+# Twitch stream to Slack
 
 This tool posts to you Slack group a nice message for any streamer that is online when the bot runs the script.
 It does not post the message multiple times nor does it take account that the game has been changed while the stream is online.
