@@ -14,8 +14,7 @@ Using the MySQL adding and removing is done with 'add username' and 'rem usernam
 ![Screenshot](/static/wrong.png?raw=true "Wrong keyword or no keyword")
 
 ###### NOTE:
-The username has to be the one that is used on Twitch.tv and in lowercase
-
+The username has to be the one that is used on Twitch.tv.
 ###### Output:
 ![Screenshot](/static/twitch_stream.png?raw=true "Actual post to Slack when stream is online")
 
