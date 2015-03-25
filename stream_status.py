@@ -23,6 +23,7 @@ cursor = cnx.cursor()
 
 def Twitch(*args, **kwargs):
 	cnx
+	cursor = cnx.cursor()
 	query = ('SELECT table_row FROM db_table')
 	cursor.execute(query)
 	streams = cursor.fetchall()
@@ -51,7 +52,6 @@ def Twitch(*args, **kwargs):
 	for x in streams:
 		link = url+x[0]
 		urls.append(link)
-		cursor.close()
 
 	# Check if stream is up or down, if stream is up post is to slack
 	for y in urls:
@@ -92,6 +92,7 @@ class server(object):
 
 		if keyword == 'add': # This catches 'add' and add the username to the database
 			cnx
+			cursor = cnx.cursor()
 			user = trigger[12:]
 			try:
 				add = ('INSERT INTO db_table(table_row) VALUES ("{}")').format(user.lower())
@@ -103,6 +104,7 @@ class server(object):
 			print user + ' added to streamer database.'
 		elif keyword == 'rem': # This catches 'rem' and deletes a username from the database
 			cnx
+			cursor = cnx.cursor()
 			user = trigger[12:]
 			try:
 				remove = ('DELETE FROM db_table WHERE table_row = "{}"').format(user.lower())
