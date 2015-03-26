@@ -9,13 +9,16 @@ job_defaults = {
     'max_instances': 3
 }
 
+#Slack related
+slack = 'SLACK_INCOMING_URL'
+
 # Posted urls
 online = []
 
 # MySQL database credentials
 usern = 'USERNAME'
 ppwd = 'PASSWORD'
-host = 'DATABASE_IP'
+host = 'IP_ADDRESS'
 dbase = 'DATABASE'
 cnx = MySQLdb.connect(user=usern, passwd=ppwd, host=host, db=dbase)
 
@@ -40,9 +43,6 @@ def Twitch(*args, **kwargs):
 	# Channel dict
 	games = {'Battlefield Hardline': '#battlefield', 'Call of Duty: Advanced Warfare': '#cod', 'Call of Duty: Black Ops II': '#cod', 'Minecraft: Xbox One Edition': '#minecraft', 'Grand Theft Auto V': '#gtav', 'Destiny': '#destiny', 'Halo: The Master Chief Collection': '#halo_mcc'}
 
-	#Slack related
-	slack = 'SLACK_INCOMING_WEBHOOK'
-
 	# Url list generated from base url
 	urls = []
 
@@ -53,6 +53,7 @@ def Twitch(*args, **kwargs):
 	for user_name in streams:
 		link = api_url+user_name[0]
 		urls.append(link)
+
 
 	# Check if stream is up or down, if stream is up post is to slack
 	for full_url in urls:
@@ -76,6 +77,7 @@ def Twitch(*args, **kwargs):
 			# Put Twitch username to a list for later inspection
 			online.append(data[u'stream'][u'channel'][u'name'])
 
+
 class server(object):
 	exposed = True
 
@@ -83,7 +85,7 @@ class server(object):
 		print 'We got pinged'
 		return file('index.html')
 
-	def POST():
+	def POST(*args, **kwargs):
 		json_parse = json.dumps(cherrypy.request.body.params)
 		# Decode the json
 		decoded = json.loads(json_parse)
@@ -96,7 +98,7 @@ class server(object):
 			user = trigger[12:]
 			add = ('INSERT INTO db_table(table_row) VALUES ("{}")').format(user.lower())
 			cursor.execute(add)
-			return json.dumps({'text': user + ' added to streamer database.'})
+			return requests.post(slack, json.dumps({'text': user + ' added to streamer database.'}))
 			print user + ' added to streamer database.'
 		elif keyword == 'rem':
 			cnx
@@ -104,11 +106,11 @@ class server(object):
 			user = trigger[12:]
 			remove = ('DELETE FROM db_table WHERE table_row = "{}"').format(user.lower())
 			cursor.execute(remove)
-			return json.dumps({'text': user + ' removed from streamer database.'})
+			return requests.post(slack, json.dumps({'text': user + ' removed from streamer database.'}))
 			print user + ' removed from streamer database.'
 		else:
 			print trigger + ' (Wrong keyword used)'
-			return json.dumps({'text': 'Please check your keyword. I understand only "add" or "rem".\nSo a working command is "!twitch add username" where the username is the one in the actual Twitch.tv url.'})
+			return requests.post(slack, json.dumps({'text': 'Please check your keyword. I understand only "add" or "rem".\nSo a working command is "!twitch add username" where the username is the one in the actual Twitch.tv url.'}))
 
 
 def Config(*args, **kwargs): # CherryPy server conf files
@@ -119,7 +121,7 @@ def Config(*args, **kwargs): # CherryPy server conf files
 		
 if __name__ == '__main__': # APScheduler start
 	scheduler = BackgroundScheduler(job_defaults=job_defaults)
-	scheduler.add_job(Twitch, 'interval', seconds=120)
+	scheduler.add_job(Twitch, 'interval', seconds=30)
 	print "Bot started!"
 	scheduler.start()
 	Config()
