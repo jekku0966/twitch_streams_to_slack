@@ -10,7 +10,7 @@ job_defaults = {
 }
 
 #Slack related
-slack = 'SLACK_INCOMING_URL'
+slack = 'SLACK_INCOMING_WEBHOOK'
 
 # Posted urls
 online = []
@@ -18,7 +18,7 @@ online = []
 # MySQL database credentials
 usern = 'USERNAME'
 ppwd = 'PASSWORD'
-host = 'IP_ADDRESS'
+host = 'DATABASE_IP_ADDRESS'
 dbase = 'DATABASE'
 cnx = MySQLdb.connect(user=usern, passwd=ppwd, host=host, db=dbase)
 
@@ -27,7 +27,6 @@ cursor = cnx.cursor()
 
 def Twitch(*args, **kwargs):
 	cnx
-	cursor = cnx.cursor()
 	query = ('SELECT table_row FROM db_table')
 	cursor.execute(query)
 	streams = cursor.fetchall()
@@ -81,36 +80,59 @@ def Twitch(*args, **kwargs):
 class server(object):
 	exposed = True
 
-	def GET(*args, **kwargs): # Print to console on GET and return a html page if the url is visited
+	def GET(*args, **kwargs):
+	# Print to console on GET and return a html page if the url is visited
 		print 'We got pinged'
 		return file('index.html')
 
 	def POST(*args, **kwargs):
+	# Response to HTTP POST from Slack to add and remove users from the streamer list
+	# If user is already on the list the bot responses back with "username already on the list"
 		json_parse = json.dumps(cherrypy.request.body.params)
-		# Decode the json
 		decoded = json.loads(json_parse)
 		trigger = decoded['text']
 		keyword = trigger[8:11]
 
 		if keyword == 'add':
-			cnx
-			cursor = cnx.cursor()
 			user = trigger[12:]
-			add = ('INSERT INTO db_table(table_row) VALUES ("{}")').format(user.lower())
-			cursor.execute(add)
-			return requests.post(slack, json.dumps({'text': user + ' added to streamer database.'}))
-			print user + ' added to streamer database.'
+			if user in user_check(user):
+				print user + ' is already on the list.'
+				return json.dumps({'text': user + ' is already in the list.'})
+			else:
+				add = ('INSERT INTO db_table(table_row) VALUES ("{}")').format(user.lower())
+				cursor.execute(add)
+				print user + ' added to streamer database.'
+				return json.dumps({'text': user + ' added to streamer database.'})
+
 		elif keyword == 'rem':
-			cnx
-			cursor = cnx.cursor()
 			user = trigger[12:]
-			remove = ('DELETE FROM db_table WHERE table_row = "{}"').format(user.lower())
-			cursor.execute(remove)
-			return requests.post(slack, json.dumps({'text': user + ' removed from streamer database.'}))
-			print user + ' removed from streamer database.'
+			if user not in user_check(user):
+				print user + ' is not on the list.'
+				return json.dumps({'text': user + ' is not on the list.'})
+			else:
+				remove = ('DELETE FROM db_table WHERE table_row = "{}"').format(user.lower())
+				cursor.execute(remove)
+				print user + ' removed from streamer database.'
+				return json.dumps({'text': user + ' removed from streamer database.'})
+
 		else:
 			print trigger + ' (Wrong keyword used)'
-			return requests.post(slack, json.dumps({'text': 'Please check your keyword. I understand only "add" or "rem".\nSo a working command is "!twitch add username" where the username is the one in the actual Twitch.tv url.'}))
+			return json.dumps({'text': 'Please check your keyword. I understand only "add" or "rem".\nSo a working command is "!twitch add/rem username" where the username is the one in the actual Twitch.tv url.'})
+
+
+def user_check(users):
+	# This is for checking whether the given username is already added to the list
+	user = []
+	cnx
+	query = ('SELECT table_row FROM db_table')
+	cursor.execute(query)
+	users = cursor.fetchall()
+
+	for username in users:
+		users = list(username)
+		user.append(users[0])
+
+	return user
 
 
 def Config(*args, **kwargs): # CherryPy server conf files
@@ -121,7 +143,7 @@ def Config(*args, **kwargs): # CherryPy server conf files
 		
 if __name__ == '__main__': # APScheduler start
 	scheduler = BackgroundScheduler(job_defaults=job_defaults)
-	scheduler.add_job(Twitch, 'interval', seconds=30)
+	scheduler.add_job(Twitch, 'interval', seconds=120)
 	print "Bot started!"
 	scheduler.start()
 	Config()
