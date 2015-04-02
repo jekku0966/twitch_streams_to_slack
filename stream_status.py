@@ -10,15 +10,15 @@ job_defaults = {
 }
 
 #Slack related
-slack = 'SLACK_INCOMING_WEBHOOK'
+slack = 'SLACK_INCOMING_WEBHOOK_URL'
 
 # Posted urls
 online = []
 
 # MySQL database credentials
-usern = 'USERNAME'
-ppwd = 'PASSWORD'
-host = 'DATABASE_IP_ADDRESS'
+usern = 'DB_USERNAME'
+ppwd = 'DB_PASSWORD'
+host = 'DB_IP_ADDRESS'
 dbase = 'DATABASE'
 cnx = MySQLdb.connect(user=usern, passwd=ppwd, host=host, db=dbase)
 
@@ -97,7 +97,7 @@ class server(object):
 			user = trigger[12:]
 			if user in user_check(user):
 				print user + ' is already on the list.'
-				return json.dumps({'text': user + ' is already in the list.'})
+				return json.dumps({'text': user + ' is already on the list.'})
 			else:
 				add = ('INSERT INTO db_table(table_row) VALUES ("{}")').format(user.lower())
 				cursor.execute(add)
@@ -115,12 +115,16 @@ class server(object):
 				print user + ' removed from streamer database.'
 				return json.dumps({'text': user + ' removed from streamer database.'})
 
+		elif keyword == 'lst':
+			print 'Userlist was asked. ' + ', '.join(user_check())
+			return json.dumps({'text': 'Currently these users are on my list:\n' + ', '.join(user_check())+'\nIf you are not on my list, use "!twitch add _username_ or if you want to remove yourself from the list use "!twitch rem _username_"'})
+
 		else:
 			print trigger + ' (Wrong keyword used)'
-			return json.dumps({'text': 'Please check your keyword. I understand only "add" or "rem".\nSo a working command is "!twitch add/rem username" where the username is the one in the actual Twitch.tv url.'})
+			return json.dumps({'text': 'Please check your keyword. I understand only "add", "rem" or "lst".\nSo a working command is "!twitch add/rem _username_" where the username is the one in the actual Twitch.tv url or "!twitch lst" which lists all added users'})
 
 
-def user_check(users):
+def user_check(*args, **kwargs):
 	# This is for checking whether the given username is already added to the list
 	user = []
 	cnx
