@@ -1,0 +1,5 @@
+# requirements.txt
+requests>=2.5.1
+cherrypy==3.6.0
+MySQL-python==1.2.5
+APScheduler==3.0.1

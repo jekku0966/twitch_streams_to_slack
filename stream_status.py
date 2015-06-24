@@ -10,15 +10,15 @@ job_defaults = {
 }
 
 #Slack related
-slack = 'SLACK_INCOMING_WEBHOOK_URL'
+slack = 'SLACK INCOMING WEBHOOK URL'
 
 # Posted urls
 online = []
 
 # MySQL database credentials
-usern = 'DB_USERNAME'
-ppwd = 'DB_PASSWORD'
-host = 'DB_IP_ADDRESS'
+usern = 'USERNAME'
+ppwd = 'PASSWORD'
+host = 'DATABASE IP'
 dbase = 'DATABASE'
 cnx = MySQLdb.connect(user=usern, passwd=ppwd, host=host, db=dbase)
 
@@ -35,9 +35,11 @@ def Twitch(*args, **kwargs):
 	uname = 'TwitchBot'
 	icon = ':twitch:'
 	channel = '#main-chat'
+	#	Twitch.tv API URL
 
 	#	Twitch.tv API URL
 	api_url = 'https://api.twitch.tv/kraken/streams/'
+
 	
 	# Channel dict
 	games = {'Battlefield Hardline': '#battlefield', 'Call of Duty: Advanced Warfare': '#cod', 'Call of Duty: Black Ops II': '#cod', 'Minecraft: Xbox One Edition': '#minecraft', 'Grand Theft Auto V': '#gtav', 'Destiny': '#destiny', 'Halo: The Master Chief Collection': '#halo_mcc'}
@@ -52,6 +54,7 @@ def Twitch(*args, **kwargs):
 	for user_name in streams:
 		link = api_url+user_name[0]
 		urls.append(link)
+
 
 
 	# Check if stream is up or down, if stream is up post is to slack
